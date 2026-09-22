@@ -1,0 +1,2223 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    direction: rtl;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #fffbeb;
+    font-family: 'Segoe UI', 'Heebo', 'Assistant', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 3px solid #f59e0b;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Animals hop between hexes: each stop supplies its own x/y offset. */
+  @keyframes hop {
+    0%,
+    100% {
+      transform: translate(var(--hop-x0, 0px), var(--hop-y0, 0px));
+    }
+    33% {
+      transform: translate(var(--hop-x1, 0px), var(--hop-y1, 0px));
+    }
+    66% {
+      transform: translate(var(--hop-x2, 0px), var(--hop-y2, 0px));
+    }
+  }
+
+  /* Gentle peach wiggle on a wrong answer - never harsh. */
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-7px) rotate(-1deg);
+    }
+    50% {
+      transform: translateX(6px) rotate(1deg);
+    }
+    75% {
+      transform: translateX(-4px);
+    }
+  }
+
+  /* Street hopscotch: chalk dust, a stamped footprint and the hop arc.
+   * All transform/opacity only, so they stay on the compositor.
+   */
+  @keyframes chalkDust {
+    0% {
+      opacity: 0.9;
+      transform: translate3d(0, 0, 0) scale(0.4);
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(0, -14px, 0) scale(1.6);
+    }
+  }
+
+  @keyframes stampIn {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, -8px, 0) scale(1.5) rotate(-8deg);
+    }
+    60% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(0.94) rotate(2deg);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    }
+  }
+
+  @keyframes hopUp {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    45% {
+      transform: translate3d(0, -10px, 0);
+    }
+  }
+
+  /* A chalk number being drawn on: quick, slightly irregular, ends settled. */
+  @keyframes chalkIn {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, 4px, 0) rotate(-3deg) scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    }
+  }
+
+  /* Street mini-games: balloon float, wrong-pick wobble and pop burst. */
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+      transform: translateY(-14px) rotate(2deg);
+    }
+  }
+
+  @keyframes wobble {
+    0%,
+    100% {
+      transform: translateX(0) rotate(0deg);
+    }
+    20% {
+      transform: translateX(-6px) rotate(-6deg);
+    }
+    50% {
+      transform: translateX(6px) rotate(6deg);
+    }
+    80% {
+      transform: translateX(-3px) rotate(-3deg);
+    }
+  }
+
+  @keyframes burst {
+    0% {
+      transform: scale(0.4);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.1);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * Pop marker. Opacity-only so the layer never repaints geometry; the old
+   * scale(0.4) -> scale(2.1) version resized a composited layer on every pop.
+   */
+  @keyframes burstFade {
+    0% {
+      opacity: 1;
+      transform: translateZ(0) scale(1.1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateZ(0) scale(1.4);
+    }
+  }
+
+  /*
+   * Balloon sprint: one spark of the pop burst.
+   *
+   * Every spark shares this keyframe and is rotated by its own `--angle`, so an
+   * eight-particle burst is a single animation rather than eight different ones.
+   * Translating out along Y and then rotating the parent puts each spark on its
+   * own ray, which is what turns a scale-up into an actual spray.
+   */
+  @keyframes popSpark {
+    0% {
+      opacity: 1;
+      transform: rotate(var(--angle, 0deg)) translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: rotate(var(--angle, 0deg)) translateY(-30px) scale(0.3);
+    }
+  }
+
+  @keyframes hopSmall {
+    0% {
+      transform: translateY(10px) scale(0.8);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  /*
+   * Cargo Hub: the overloaded truck leans and shudders on its springs.
+   *
+   * A rotate rather than a translate, because the point is that the VEHICLE cannot
+   * take the weight - a truck that merely shifted sideways would read as motion, not
+   * as strain. The animation LOOPS while the overload lasts (the truck stays leaned
+   * over, breathing), rather than playing once: a single shudder would leave the truck
+   * sitting level and looking fine while it is still too heavy. The amplitude stays
+   * small so the shuddering never obscures the crates the child needs to read.
+   */
+  @keyframes truckTilt {
+    0%,
+    100% {
+      transform: rotate(-1.2deg);
+    }
+    50% {
+      transform: rotate(1.2deg);
+    }
+  }
+
+  /*
+   * Cargo Hub: the wheels turn while the truck is driving in or out.
+   *
+   * COUNTER-CLOCKWISE, because the truck travels LEFTWARD. A wheel rolling left rotates so
+   * its bottom edge moves backwards relative to the hub - which on screen is a negative
+   * angle. Spinning it the other way would read as the truck skidding rather than driving,
+   * and it is the single detail that most gives away a fake-looking wheel.
+   *
+   * A FULL 360deg LOOP, so the resting and end states are identical and the cycle repeats
+   * seamlessly for as long as the truck is moving - a partial rotation would visibly snap
+   * back at the end of each iteration.
+   */
+  @keyframes wheelSpin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
+  /*
+   * Cargo Hub: the headlight beam pulses while the load sits exactly on target.
+   *
+   * THE BEAM IS OFF UNTIL THE TARGET IS HIT, so this keyframe only ever runs on a beam
+   * that has already been switched on - it is the celebration, not the switch. It breathes
+   * between full and slightly-dimmed rather than flashing to black, because dropping to
+   * zero mid-pulse would read as the light flickering rather than as it glowing.
+   *
+   * IT LOOPS, so the beam keeps breathing for as long as the load stays on target - the
+   * child can see that their answer is still right while they look at it, rather than
+   * getting a brief acknowledgement and then a static lamp.
+   */
+  @keyframes headlightGlow {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /*
+   * Cargo Hub: a puff of exhaust smoke when a crate lands on the bed.
+   *
+   * The puff RISES AND FADES while growing, which is what separates smoke from a dot
+   * appearing. It plays once and stays gone; `forwards` holds the invisible end state so
+   * the puff cannot blink back into view on the frame the animation releases the element.
+   */
+  @keyframes exhaustPuff {
+    0% {
+      transform: translateY(0) scale(0.4);
+      opacity: 0;
+    }
+    25% {
+      opacity: 0.7;
+    }
+    100% {
+      transform: translateY(-22px) scale(1.6);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * Cargo Hub: the microscopic bounce when the child honks the horn.
+   *
+   * A SCALE RATHER THAN A TRANSLATE, so the truck cannot leave the ground line it is
+   * parked on: it is a flinch, not a jump. The amplitude is deliberately tiny - big enough
+   * to feel like a response, small enough that a child mashing the cab cannot make the
+   * cargo and the wheels fall out of registration.
+   */
+  @keyframes hornBounce {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    45% {
+      transform: scale(1.02);
+    }
+  }
+
+  /* Bridge Guard: the active padlock breathes to draw the eye. */
+  @keyframes pulseLock {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.07);
+    }
+  }
+
+  /* Town map: a smoke puff drifts up from the bakery chimney and fades out. */
+  @keyframes smoke {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.5);
+    }
+    25% {
+      opacity: 0.75;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--puff-x, 0px), -34px) scale(1.9);
+    }
+  }
+
+  /*
+  /*
+   * Town map: a resting ground animal's idle. A soft vertical breath with a
+   * small hop on the exhale. Deliberately transform-only - the animals must
+   * stay fully opaque.
+   */
+  @keyframes idleBreathe {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, calc(var(--idle-lift, 3px) * -1), 0);
+    }
+  }
+
+  /* Town map: the duckling bobbing gently on the river. */
+  @keyframes idleWater {
+    0%,
+    100% {
+      transform: translate3d(0, -2px, 0) rotate(-3deg);
+    }
+    50% {
+      transform: translate3d(0, 2px, 0) rotate(3deg);
+    }
+  }
+
+  /*
+   * Adventure Road balloons: rise from below the stage to above it.
+   *
+   * ONE JOURNEY IS ONE STAGE HEIGHT, PLUS THE BALLOON ITSELF.
+   *
+   * `--stage-h` is the measured height of the play area. The rising element is a
+   * single balloon sitting at the TOP of its lane, so it starts one whole stage
+   * below the floor (`translateY(--stage-h)`) and finishes one stage above the
+   * top (`translateY(-100%)`, i.e. its own height, past the ceiling). The balloon
+   * is therefore visible for essentially the entire animation and off-screen only
+   * at the two ends.
+   *
+   * THE TIME SPENT VISIBLE IS WHAT THE SPAWN CADENCE ASSUMES. `spawnIntervalFor`
+   * spaces spawns by `riseSeconds / fieldSize`, which only holds the field at
+   * `fieldSize` if a balloon is gone after roughly `riseSeconds`. When the journey
+   * was longer than the stage - the original `100%` to `-200%` against a
+   * full-height element, three stage-heights in total - balloons lingered off the
+   * top for two extra stage-heights, exited in clumps, and a three-balloon field
+   * drained to EMPTY for several seconds between batches.
+   *
+   * The z-component is a hair above zero on purpose: minifiers fold
+   * `translate3d(0, y, 0)` down to `translateY(y)`, which gives up the
+   * guaranteed compositor layer. A non-zero z keeps it a real 3D transform.
+   */
+  @keyframes riseBalloon {
+    0% {
+      transform: translate3d(0, var(--stage-h, 100%), 0.01px);
+    }
+    100% {
+      transform: translate3d(0, -100%, 0.01px);
+    }
+  }
+  /*
+   * Reduced motion. Without this the balloon would simply stop dead wherever
+   * the animation was cancelled - usually off the bottom edge, so the game
+   * would look empty. Parking it at rest keeps every balloon visible and
+   * clickable, and popping still removes it, so the level stays completable.
+   */
+  @keyframes riseStill {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 0, 0.01px);
+    }
+    30%,
+    70% {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+      transform: translate3d(0, 0, 0.01px);
+    }
+  }
+  /* Adventure Road: a red wash over the stage when a hazard balloon is tapped. */
+  @keyframes hazardFlash {
+    0%,
+    100% {
+      filter: none;
+    }
+    40% {
+      filter: drop-shadow(0 0 0 rgba(244, 63, 94, 0)) saturate(1.6);
+      background-color: rgba(244, 63, 94, 0.12);
+    }
+  }
+
+  /*
+   * Bonus Island balloon: the wicker basket's shadow, which grows in as the
+   * balloon settles. Scaling only - the shadow keeps a constant tint rather
+   * than fading, so the scene stays free of opacity animation.
+   */
+  @keyframes balloonShadow {
+    0% {
+      transform: translateX(-50%) scale(0.55);
+    }
+    100% {
+      transform: translateX(-50%) scale(1);
+    }
+  }
+
+  /*
+   * Bonus Island balloon: the arrival descent.
+   *
+   * STARTS AND ENDS AT REST, WITH NO OVERSHOOT AND NO SECOND KEYFRAME. The balloon is a heavy object
+   * on a canopy of hot air, so it does not bounce - it sinks, decelerating all the way, and stops.
+   * `ease-out` is what puts the deceleration in: the balloon covers most of its drop early and the
+   * last stretch is almost invisible, which is what a real descent looks like.
+   *
+   * THE START IS -260px RATHER THAN -120px. At the old distance the balloon was already most of the
+   * way down when the animation began, so a 4.5s descent would have read as a slow crawl from just
+   * above the rooftops. Starting further up gives the longer, gentler drop the brief asks for while
+   * still finishing at the meadow.
+   *
+   * THE END IS `translateY(0)` AND NOTHING ELSE. Any upward value here would reintroduce the exact
+   * jog this change is fixing - the bob is a separate element precisely so this keyframe can end
+   * flat.
+   */
+  @keyframes balloonDescend {
+    0% {
+      transform: translateY(-260px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  /*
+   * Bonus Island balloon: idle hover once it has landed.
+   *
+   * RE-ANCHORED TO `translateY(0)`. The previous version ran from -6px to +2px, so the moment the
+   * phase flipped to `landed` the balloon was yanked six pixels ABOVE where the descent had just
+   * parked it - then bobbed down. That upward snap was the reported "second descent".
+   *
+   * Starting at 0 means the first frame is identical to the descent's last frame, so the handover is
+   * invisible. The travel is deliberately small and asymmetric (-3px up, +1px down) because a
+   * balloon on a tether barely moves; a symmetrical +/-6px swing reads as a boat on water.
+   *
+   * 5s rather than 3.4s, to match the calmer pace of the taller descent.
+   */
+  @keyframes balloonBob {
+    0%,
+    100% {
+      transform: translateY(-3px);
+    }
+    50% {
+      transform: translateY(1px);
+    }
+  }
+
+  /*
+   * Bonus Island balloon: lifts away and drifts off to the right.
+   *
+   * A DEPARTURE READS AS A DEPARTURE BECAUSE IT ACCELERATES. `ease-in` starts the climb slowly - the
+   * balloon has to gather lift before it moves - and the drift right is a slow lateral pull rather
+   * than a slide. 2s, up from 1.2s, so the exit is graceful instead of a jump cut.
+   */
+  @keyframes balloonDepart {
+    0% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    70% {
+      transform: translate(46px, -168px) scale(0.8);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(86px, -260px) scale(0.68);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * ================================================================================================
+   * THE TOWN MAP'S SKY: cloud shadows and the golden eagle.
+   * ================================================================================================
+   */
+
+  /*
+   * The eagle's glide. It is a straight diagonal with a slow flap, because a real soaring bird
+   * holds its line and only dips a few degrees of roll.
+   *
+   * `--eagle-x` IS AN ABSOLUTE LENGTH, NOT A PERCENTAGE, AND THAT IS LOAD-BEARING. A percentage
+   * inside `translate()` resolves against the element's OWN border box - which here is a ~56px
+   * bird - so `translateX(108%)` would move it about 60px and the "crossing" would be a hop.
+   * The caller therefore passes the stage's measured width in pixels (see `GoldenEagle`), which
+   * is what actually carries the bird from one edge to the other.
+   *
+   * The Y values are plain lengths for the same reason: a sway expressed as a percentage would
+   * be a couple of pixels on a short bird.
+   *
+   * THE ROLL IS PART OF THE KEYFRAME, NOT A SEPARATE ANIMATION. Layering a `rotate` on top of
+   * this translate would need a second wrapper element and the two transforms would have to be
+   * kept in sync by hand; composing them in one keyframe means the bank is always applied to
+   * the bird that is actually on screen.
+   */
+  @keyframes eagleGlide {
+    0% {
+      transform: translate(0, 0) rotate(6deg);
+    }
+    25% {
+      transform: translate(calc(var(--eagle-x) * 0.25), -1.6rem) rotate(10deg);
+    }
+    50% {
+      transform: translate(calc(var(--eagle-x) * 0.5), 0.8rem) rotate(6deg);
+    }
+    75% {
+      transform: translate(calc(var(--eagle-x) * 0.75), -1.1rem) rotate(3deg);
+    }
+    100% {
+      transform: translate(var(--eagle-x), 0) rotate(6deg);
+    }
+  }
+
+  /* Wingbeat, applied to the bird inside the gliding wrapper. Kept slow and shallow so the
+     eagle reads as soaring on a thermal rather than hurrying somewhere. */
+  @keyframes eagleFlap {
+    0%,
+    100% {
+      transform: scaleY(1) translateY(0);
+    }
+    50% {
+      transform: scaleY(0.86) translateY(-3px);
+    }
+  }
+
+  /* The catch: the bird flinches upward and shrinks away as the reward fires. */
+  @keyframes eagleCaught {
+    0% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    35% {
+      transform: scale(1.18) translateY(-10px);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.5) translateY(-34px);
+      opacity: 0;
+    }
+  }
+
+  /* Golden feather puff. Six feathers share this and fan out from the catch point, each given
+     its own angle and distance inline through `--puff-x` / `--puff-y`. */
+  @keyframes featherPuff {
+    0% {
+      transform: translate(0, 0) scale(0.6) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--puff-x), var(--puff-y)) scale(1) rotate(140deg);
+      opacity: 0;
+    }
+  }
+
+  /* The expanding ring that announces the catch. */
+  @keyframes catchRing {
+    0% {
+      transform: scale(0.4);
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(2.1);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * The reward toast. It rises into place, holds, and fades - and it is `both` fill so the
+   * element is invisible at rest rather than flashing at full opacity before the animation
+   * starts.
+   */
+  @keyframes eagleToast {
+    0% {
+      transform: translateY(14px) scale(0.94);
+      opacity: 0;
+    }
+    12% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    82% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-10px) scale(0.97);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * THE CLOSED-STATION TOAST.
+   *
+   * Rises in, holds, and fades - with `both` fill so the element is invisible at rest rather than
+   * flashing at full opacity for the frame before the animation starts.
+   *
+   * THE ENTRANCE IS DELIBERATELY THE SLOWEST PART. This toast answers a tap on a pin that the child
+   * expected to open a game, so the disappointing half of the message needs to arrive gently; a
+   * snappy pop would read as an error dialog. The exit is quicker, because by then the message has
+   * been delivered and lingering would only cover the map.
+   */
+  @keyframes closedToast {
+    0% {
+      transform: translateY(12px) scale(0.95);
+      opacity: 0;
+    }
+    14% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    78% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-8px) scale(0.98);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * CLOUD SHADOWS: one straight diagonal sweep, fully off one edge to fully off the other.
+   *
+   * THE PREVIOUS VERSION STARTED AT `translate3d(-x)` - it moved each blob FURTHER LEFT before
+   * drifting right, so for the first half of every cycle the shadow travelled AWAY from the village.
+   * Combined with blobs that started barely clipping the left edge, the result was a layer that
+   * never visibly crossed the map. The `from`/`to` pair below is strictly left-to-right and
+   * bottom-left-to-top-right, with no reversal.
+   *
+   * THE ENDPOINTS ARRIVE AS PIXELS FROM `CloudShadows`, WHICH MEASURES THE STAGE. They cannot be
+   * percentages: a percentage inside `translate()` resolves against the element's OWN box, so a
+   * 44rem blob would travel 44rem rather than one and a half maps. They cannot be `vw` either,
+   * because the stage is capped at 1400px while the viewport is not - so a `vw` travel overshoots
+   * on a narrow window and falls short on a wide one, which is why the old version only ever
+   * carried the shadow about halfway across on a large monitor.
+   *
+   * `translate3d` IS NOT COSMETIC. A 2D `translate` is composited on the CPU in the layer tree and
+   * can force repaints of the large blurred boxes underneath it; promoting to a 3D transform hands
+   * the whole animation to the compositor, which is what keeps a permanently-running ambient layer
+   * off the main thread. `will-change` alone would not do this.
+   */
+  @keyframes cloudShadowSweep {
+    from {
+      transform: translate3d(var(--shadow-from-x), var(--shadow-from-y), 0);
+    }
+    to {
+      transform: translate3d(var(--shadow-to-x), var(--shadow-to-y), 0);
+    }
+  }
+
+  /*
+   * Reward shimmer for the balloon aura and its sparkle. */
+  @keyframes sparkle {
+    0%,
+    100% {
+      opacity: 0.45;
+      transform: scale(0.9);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.12);
+    }
+  }
+
+  /* ===================================================================
+   * Bonus Island: drifting clouds for the Hot Air Balloon sky.
+   * =================================================================== */
+
+  /*
+   * Cloud drift. Each cloud is given its own duration and negative delay inline,
+   * so they do not march across in lockstep; a shared duration would read as a
+   * single sheet of scenery sliding rather than as separate, deeper clouds.
+   * The travel is a fraction of the viewport width, so it scales with the modal.
+   */
+  @keyframes drift {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-140%);
+    }
+  }
+
+  /*
+   * Correct-pick bounce. A quick lift-and-settle on the envelope. Kept short
+   * (300ms) because at this speed the next pair is already on screen when it
+   * plays - a long celebration would still be running under the next question.
+   */
+  @keyframes balloonPop {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+    45% {
+      transform: translateY(-14px) scale(1.09);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+   * The altitude meter's miniature balloon, nudged upward on a correct answer.
+   * The meter's own position is a percentage set inline; this only adds the
+   * overshoot on top, so the two compose instead of fighting.
+   */
+  @keyframes riseNudge {
+    0% {
+      transform: translateY(6px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  /* Golden clouds at the top of the altitude track. */
+  @keyframes goldGlow {
+    0%,
+    100% {
+      opacity: 0.6;
+      filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.55));
+    }
+    50% {
+      opacity: 1;
+      filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.95));
+    }
+  }
+
+  /* ===================================================================
+   * Farm barn: the rebuilt "מי באסם?" cinematic stage.
+   * =================================================================== */
+
+  /*
+   * The trot bob. Applied to an animal's inner group, while the outer group
+   * carries the horizontal travel - so the hop composes with the slide instead
+   * of fighting it over the same `transform`.
+   *
+   * The hop is deliberately tight (max -6px) so an animal's feet never lift far
+   * off the ground line. Animated elements MUST set `transform-box: fill-box`
+   * and `transform-origin` from React, otherwise a translate resolves against
+   * the whole SVG viewport instead of the animal's own box.
+   */
+  @keyframes trotBob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  /* The end-game barn party: an energetic jump-and-wiggle dance. */
+  @keyframes animalDance {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-5deg);
+    }
+    25% {
+      transform: translateY(-18px) rotate(5deg);
+    }
+    50% {
+      transform: translateY(0) rotate(-5deg);
+    }
+    75% {
+      transform: translateY(-18px) rotate(5deg);
+    }
+  }
+
+  /* Heavy wooden shutters dropping from above, with a small settle bounce. */
+  @keyframes shutterSlam {
+    0% {
+      transform: translateY(-105%);
+    }
+    62% {
+      transform: translateY(0);
+    }
+    76% {
+      transform: translateY(-7%);
+    }
+    88% {
+      transform: translateY(0);
+    }
+    94% {
+      transform: translateY(-3%);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  /* Shutters swinging wide open for the end-game party. */
+  @keyframes shutterOpen {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-108%);
+    }
+  }
+
+  /* A dust puff kicked up where a shutter lands (HTML elements). */
+  @keyframes dustPuff {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, 0, 0) scale(0.3);
+    }
+    25% {
+      opacity: 0.85;
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(var(--dust-x, 0px), -22px, 0) scale(1.8);
+    }
+  }
+
+  /*
+   * The same puff inside the stage SVG. SVG children cannot use translate3d on
+   * the element's own coordinate space, so this animates the parent group via
+   * `transform` and `r` instead.
+   */
+  @keyframes dustPuffSvg {
+    0% {
+      opacity: 0;
+      r: 3;
+      transform: translateX(0);
+    }
+    25% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0;
+      r: 13;
+      transform: translateX(var(--dust-x, 0px));
+    }
+  }
+
+  /* Light confetti shards drifting down over the end-game party. */
+  @keyframes confettiFall {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, -20px, 0) rotate(0deg);
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(var(--confetti-x, 20px), 140px, 0) rotate(320deg);
+    }
+  }
+
+  /*
+    Animal Scales: a quick upward hop for the animals on the LIGHTER pan when
+    the imbalance is three bales or more. A 400ms one-shot, so it reads as a
+    comic bounce rather than a physics simulation.
+  */
+  @keyframes popBounce {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+    40% {
+      transform: translateY(-26px) scale(1.06);
+    }
+    70% {
+      transform: translateY(-8px) scale(0.98);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+    Kiosk: the customer walking in from the right.
+
+    THE TRAVEL DIRECTION FOLLOWS THE LAYOUT. The kiosk is `dir="rtl"`, so the right-hand
+    side is where a speaker enters from - sliding in from the LEFT would read as walking
+    backwards out of the shop. The start is offset to the right (`translateX(90px)`) and
+    settled at zero, so the movement is towards the counter.
+
+    A small amount of fade rides along, because a hard-edged sprite appearing at full
+    opacity mid-slide reads as a teleport rather than an entrance. The fade is deliberately
+    short: most of the 450ms is horizontal travel, so the child sees a WALK rather than a
+    materialisation.
+  */
+  @keyframes customerIn {
+    from {
+      opacity: 0;
+      transform: translateX(90px);
+    }
+    60% {
+      opacity: 1;
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /*
+   * Cookie Bakery, Level 3: the candy badge's glow.
+   *
+   * The candy question is the only one whose subject is not the obvious thing on the
+   * tray - every cookie looks alike, and the child has to notice the sweets ON them -
+   * so its badge gets a glowing border to pull the eye up from the tray and say "this
+   * one is different".
+   *
+   * ONLY THE GLOW ANIMATES. The ring's size is fixed and the box-shadow spreads
+   * outwards from it, so the badge never reflows or nudges the tray beneath it while
+   * the child is counting. A pulsing badge that changed size would move the very
+   * diagram the question is asking about.
+   *
+   * The cycle is slow (1.4s) on purpose: this sits in a 30-second sprint, and a fast
+   * flash would read as an alarm rather than as an invitation.
+   */
+  @keyframes glowPulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 0 rgba(240, 171, 252, 0.55),
+        0 4px 10px rgba(112, 26, 117, 0.45);
+    }
+    50% {
+      box-shadow:
+        0 0 22px 6px rgba(240, 171, 252, 0.85),
+        0 4px 10px rgba(112, 26, 117, 0.45);
+    }
+  }
+
+  /*
+   * Beat Studio: the muted key's breathing glow.
+   *
+   * The missing-note challenge has to pull the eye to the one key that is asking a
+   * question, on a stage where the other four are deliberately bright. A dashed
+   * border alone is too quiet against four neon keys, so the glow breathes -
+   * brightening and dimming on a 1.6s cycle, slow enough to read as "waiting for
+   * you" rather than as a flashing alert.
+   *
+   * Only the glow animates, never the layout: the border colour and the letter are
+   * fixed, so the key never shifts or reflows while the child is reading it.
+   */
+  @keyframes pulseGlow {
+    0%,
+    100% {
+      box-shadow: 0 0 6px rgba(251, 191, 36, 0.35);
+      border-color: rgb(100 116 139);
+    }
+    50% {
+      box-shadow: 0 0 24px rgba(251, 191, 36, 0.85);
+      border-color: rgb(251 191 36);
+    }
+  }
+
+  /* A soft breathing halo behind the beam once both pans weigh the same. */
+  @keyframes balancePulse {
+    0%,
+    100% {
+      opacity: 0.28;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  /*
+    Animal Scales: the star burst thrown at the pivot when a puzzle balances.
+
+    THE THROW DISTANCE IS PER-PARTICLE, AND IT COMES IN VIA CUSTOM PROPERTIES.
+    A keyframe is a single shared rule, so it cannot know how far each of the
+    twelve stars should travel. The component hands each span its own
+    `--burst-x` / `--burst-y`, and the keyframe reads them - which is what lets
+    a ring of particles fan out to different distances from one rule.
+
+    It ends at zero opacity AND a slight shrink, so the star is fully gone
+    before the animation's `forwards` fill holds it. Without the shrink the
+    particles would vanish by fading alone and read as flickering dots.
+  */
+  @keyframes starBurst {
+    0% {
+      transform: translate(0, 0) scale(0.3);
+      opacity: 0;
+    }
+    25% {
+      transform: translate(calc(var(--burst-x, 0px) * 0.35), calc(var(--burst-y, 0px) * 0.35)) scale(1.15);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--burst-x, 0px), var(--burst-y, 0px)) scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  /*
+    Animal Scales: the right pan's animals are click-to-remove, so they grow
+    slightly under the pointer to advertise that they are tappable. The lift is
+    a transform on the sprite group; because the group is already positioned by
+    an SVG `translate` attribute, this composes on top of it rather than
+    replacing it.
+  */
+  .scale-hover-target:hover {
+    transform: scale(1.08);
+  }
+
+  /*
+    Feeding Time: food falls from the basket into a trough. Both keyframes end
+    at the resting transform (identity), so the element lands and stays put with
+    no React state involved - the animation is a one-shot CSS trigger.
+  */
+  @keyframes foodDrop {
+    0% {
+      transform: translateY(-120px) scale(0.5);
+      opacity: 0;
+    }
+    60% {
+      transform: translateY(6px) scale(1.12);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* The happy bounce an animal does once its trough has been filled. */
+  @keyframes happyBounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-8px);
+    }
+    70% {
+      transform: translateY(-3px);
+    }
+  }
+
+  /*
+   * ============================================================
+   * THE BRIDGE GUARD'S THREE MOODS.
+   * ============================================================
+   *
+   * He is a single PNG standing on a painting, so all of his character has to come
+   * from the transform applied to that one image. Three states, three keyframes, and
+   * they are mutually exclusive - the component applies exactly one at a time, so
+   * there is no cascade to reason about.
+   *
+   * THE BREATH DOES NOT MOVE HIM VERTICALLY, AND THAT IS THE POINT.
+   *
+   * It used to be a `translateY` of the whole sprite - 0 to 4px and back on a 2.5s loop -
+   * which read as a soft breath in isolation but was wrong in the composition: the image
+   * includes his boots and their shadow, so lifting it hovered him a few pixels off the
+   * dirt path every cycle. On a painted ground plane the eye catches that immediately;
+   * he looks like he is being held up rather than standing.
+   *
+   * So the idle is now a SCALE FROM THE FEET with `transform-origin` already at the
+   * bottom (`origin-bottom` on the element), which expands him upward and slightly
+   * outward the way a chest does when it fills, while the pixels at the bottom edge
+   * never move. The `scaleX` is a fraction of the `scaleY` on purpose: a breath that is
+   * equally wide and tall reads as a pulse, not as breathing. Combined with the
+   * `origin-bottom` this keeps the soles locked to the path at every frame.
+   *
+   * THE CHEER AND THE WOBBLE ARE UNCHANGED, and they are allowed to leave the ground.
+   * A victory hop is supposed to lift off, and the wobble rotates rather than
+   * translates, so it pivots on the boots instead of sliding them.
+   */
+  @keyframes guardBreathe {
+    0%,
+    100% {
+      transform: scale(1, 1);
+    }
+    50% {
+      transform: scale(1.012, 1.028);
+    }
+  }
+
+  /*
+   * The victory hop.
+   *
+   * Deliberately NOT a symmetrical bounce: he crouches a little first (the 15% mark
+   * going DOWN before going up) and lands slightly past his resting height before
+   * settling. That anticipation and overshoot is what separates a hop that reads as
+   * joyful from a sprite that merely slides up and back down.
+   */
+  @keyframes guardCheer {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+    15% {
+      transform: translateY(2px) scale(1.03, 0.97);
+    }
+    45% {
+      transform: translateY(-12px) scale(0.98, 1.04);
+    }
+    70% {
+      transform: translateY(0) scale(1.04, 0.96);
+    }
+    85% {
+      transform: translateY(-3px) scale(1);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+   * The confused wobble: a slow head-shake from the waist.
+   *
+   * Pivoted about the BOTTOM CENTRE, so he tips side to side on his feet rather than
+   * spinning around his middle - a rotation about the centre would look like he was
+   * being swung by a rope. The 2s duration is intentionally unhurried; this plays
+   * while the child re-reads the riddle they just got wrong, so a frantic shake would
+   * be hurrying them at the exact moment they need to think.
+   */
+  @keyframes guardWobble {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    20% {
+      transform: rotate(-4deg);
+    }
+    45% {
+      transform: rotate(4deg);
+    }
+    70% {
+      transform: rotate(-3deg);
+    }
+    88% {
+      transform: rotate(2deg);
+    }
+  }
+
+  /* ===================================================================
+   * The Sticker Album: pack-opening flip, legendary shine, and the reveal burst.
+   * =================================================================== */
+
+  /*
+   * THE CARD FLIP.
+   *
+   * A real 3D flip needs the parent to set `perspective`; without it the rotation reads
+   * as a flat horizontal squash instead of a card turning over. `backface-visibility` is
+   * set on the faces themselves rather than here, since the two halves have to hide on
+   * opposite sides of the turn.
+   *
+   * The mid-point is at 50% and the rotation goes a full 180deg, so the swap of front
+   * for back can happen exactly when the card is edge-on and nothing is visible.
+   */
+  @keyframes stickerFlip {
+    0% {
+      transform: rotateY(0deg);
+    }
+    100% {
+      transform: rotateY(180deg);
+    }
+  }
+
+  /*
+   * The legendary shine that loops on an owned legendary sticker.
+   *
+   * Transform and filter only, so it never nudges the layout of the grid around it, and
+   * it is slow (2.4s) on purpose: a fast shimmer on a wall of stickers would be a
+   * strobe, and the child is meant to be looking at the picture.
+   */
+  @keyframes legendaryShine {
+    0%,
+    100% {
+      box-shadow: 0 0 10px 1px rgba(251, 191, 36, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 22px 6px rgba(251, 191, 36, 0.95);
+    }
+  }
+
+  /*
+   * The sparkle burst thrown outward the moment a card lands.
+   *
+   * Each spark is given its own `--dx`/`--dy` from React and travels along that vector
+   * while fading, which means one keyframe drives eight different directions instead of
+   * eight keyframes that have to be kept in step. It ends at `opacity: 0` and is not
+   * infinite, so the burst plays once and the sparks do not keep re-firing behind the card.
+   */
+  @keyframes sparkOut {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.3);
+    }
+  }
+
+  /*
+   * The envelope's own bounce just before it opens.
+   *
+   * Small and quick - it is a shake of anticipation, not a second animation competing
+   * with the flip that follows it.
+   */
+  @keyframes envelopeShake {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    20% {
+      transform: translateY(-3px) rotate(-3deg);
+    }
+    50% {
+      transform: translateY(-6px) rotate(3deg);
+    }
+    80% {
+      transform: translateY(-3px) rotate(-2deg);
+    }
+  }
+
+  /* The golden seal stamping onto a completed page. */
+  @keyframes sealStamp {
+    0% {
+      opacity: 0;
+      transform: scale(2.2) rotate(-18deg);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(0.94) rotate(3deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  /*
+   * ===================================================================
+   * THE HOLOGRAPHIC FOIL SWEEP.
+   * ===================================================================
+   *
+   * The sheen on a rare or legendary sticker: a slanted band of light that crosses the
+   * card and then waits, over and over.
+   *
+   * THE LONG PAUSE IS THE EFFECT. The band is only in motion for the first 30% of the
+   * cycle; the remaining 70% holds it off the card's right edge doing nothing. A sweep
+   * that ran continuously would read as a loading bar - it is the wait between passes
+   * that makes it look like a tilt of the wrist catching the light.
+   *
+   * The band starts at -150% so it is fully clear of the left edge before it enters, and
+   * parks at 200% so it exits completely rather than stopping half-on the card.
+   */
+  @keyframes holographicShine {
+    0% {
+      transform: translateX(-150%) rotate(25deg);
+    }
+    30%,
+    100% {
+      transform: translateX(200%) rotate(25deg);
+    }
+  }
+
+  /*
+   * The mystery slot's lock, breathing.
+   *
+   * Scale and glow only, never position: the lock sits inside a card next to Hebrew text,
+   * and a lock that drifted would make the row it is centred in look crooked.
+   */
+  @keyframes mysteryPulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.85;
+      filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 1;
+      filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.95));
+    }
+  }
+
+  /*
+   * A freshly bought sticker popping into view.
+   *
+   * THE OVERSHOOT IS THE POINT. A plain fade-in would look like the picture had merely
+   * finished loading; a scale that overshoots past 1 and settles back reads as the sticker
+   * being UNBOXED - the same springy beat the pack opening uses when a card turns over.
+   *
+   * It starts slightly small and fully transparent rather than at zero scale, so the first
+   * frame is a visible sticker rather than an empty box - a card that grows from nothing
+   * spends its opening frames looking like a missing image.
+   */
+  @keyframes stickerReveal {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /*
+   * A legendary card's sparkles, drifting upward and fading.
+   *
+   * Each spark carries its own horizontal offset and delay from React, so one keyframe
+   * gives the whole field a scattered, un-synchronised look instead of a chorus line of
+   * dots rising in lockstep.
+   */
+  @keyframes legendSpark {
+    0% {
+      opacity: 0;
+      transform: translateY(6px) scale(0.6);
+    }
+    35% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-16px) scale(1.1);
+    }
+  }
+
+  /*
+   * The shimmer utility, matching the spec's own class name.
+   *
+   * Declared as a real utility rather than left to Tailwind's arbitrary-value syntax
+   * because the foil band is applied from more than one card variant, and a single named
+   * class keeps them from drifting apart - and keeps the reduced-motion override below
+   * able to find all of them by name.
+   */
+  .animate-shimmer-foil {
+    animation: holographicShine 3s infinite ease-in-out;
+  }
+
+  /*
+   * The night barn's eye glow: a slow throb with an occasional blink, so a pair
+   * of eyes in the dark reads as ALIVE rather than as two painted dots. The dots
+   * are part of the animal's own group, so this scales them in place on the head
+   * instead of sliding them around the stage.
+   */
+  @keyframes eyeBlink {
+    0%,
+    42%,
+    46%,
+    100% {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+    44% {
+      transform: scaleY(0.12);
+      opacity: 0.85;
+    }
+    70% {
+      opacity: 0.72;
+    }
+  }
+
+  /*
+   * The night barn's eye glow.
+   *
+   * These dots are the ONLY thing visible in a pitch-black barn, so they have to
+   * read as light sources rather than as stickers. The animation does two jobs:
+   * a slow throb so the glow breathes, and a hard blink so a pair of eyes reads
+   * as ALIVE. Both are scale/opacity only, on the eyes' own group, so the dots
+   * never move off the face they are anchored to.
+   */
+  @keyframes eyeGlow {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    45% {
+      opacity: 0.68;
+      transform: scale(0.86);
+    }
+    /* The blink: a fast close-and-open so it reads as a blink, not a fade. */
+    50% {
+      opacity: 0.9;
+      transform: scale(0.12);
+    }
+    55% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * The night barn's eyes held still at full glow, for reduced-motion users.
+   * The dots are the only visible thing in the dark, so this keeps them lit and
+   * on their faces while removing the throb and blink.
+   */
+  @keyframes eyeStill {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * The constellation spin. Applied as an INLINE style on an SVG group, because the angle is
+   * per-shape and the rotation origin is the shape's anchor in stage units.
+   */
+  @keyframes starSpin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /*
+   * The Detective Math briefing card, arriving over the empty stage.
+   *
+   * IT RISES AND SCALES RATHER THAN FADING. The card covers a stage that is about to hold the
+   * first station, and a fade would read as a panel changing state - whereas a small upward
+   * push reads as something being PLACED, which matches "a new case file landing on the desk".
+   * The travel is short (12px) on purpose: this fires once per case, but a large entrance
+   * repeated every run stops being charming and starts being a delay.
+   */
+  @keyframes briefingIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+   * The suspect badge's pop, reused by the briefing portrait and the results medal.
+   *
+   * The overshoot is the whole animation - it goes past full size and settles back - which is
+   * what makes a static PNG read as a character arriving rather than an image being loaded.
+   * The cubic-bezier in the utility class supplies the bounce; this keyframe only has to
+   * describe the two ends honestly.
+   */
+  @keyframes suspectPop {
+    from {
+      opacity: 0;
+      transform: scale(0.72);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * Station 2's illegal-pairing shake.
+   *
+   * IT IS HORIZONTAL AND SHORT ON PURPOSE. This fires on a REFUSAL - the child clicked something
+   * that cannot cancel against what they had selected - and the feedback has to say "no" without
+   * saying "wrong". A vertical bounce reads as a success; a shake reads as a refusal, which is
+   * why it is the one animation here that deliberately unsettles the object rather than
+   * celebrating it.
+   *
+   * IT ANIMATES `margin-left`, NOT `transform`. The note is positioned by a `-translate-x-1/2`
+   * utility and lifted on selection by another transform, so a transform-based shake would
+   * overwrite both and make the note jump sideways as it settled.
+   */
+  /*
+   * The pair being applied.
+   *
+   * BOTH ITEMS SHRINK AND FADE TOGETHER OVER 250MS, which is the whole visual claim of a pairing:
+   * the move happened to both sides at once. A staggered or sequential removal would say the two
+   * pages were dealt with separately, which is the misconception this station exists to correct.
+   *
+   * IT SCALES TO ZERO, NOT TO 0.55. The item is removed from state when the animation ends, and a
+   * partial shrink leaves a visible pop at the moment of unmount. Ending at `scale(0)` is what
+   * makes the timeout's removal invisible.
+   *
+   * It ends at opacity 0 and the items are unmounted the moment it does, so stopping it under
+   * reduced-motion simply removes them - which is the same end state.
+   */
+  @keyframes pairEliminate {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0) translateY(-6px);
+    }
+  }
+
+  /*
+   * The connector line drawing itself across the spine.
+   *
+   * A DASH OFFSET SWEEP RATHER THAN A WIPE, because the line is already dashed - the dashes travel
+   * along it as it appears, which reads as the move being made rather than as a line being placed.
+   * The end state is the line fully drawn, so cutting it leaves the line there.
+   */
+  @keyframes connectorDraw {
+    from {
+      opacity: 0;
+      stroke-dashoffset: 0.5;
+    }
+    to {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /*
+   * The solved polaroid turning over.
+   *
+   * A HALF TURN, NOT A FULL ONE. The photo's face carries the unknown and its back carries the
+   * value, so the child has to end up looking at the value - a full spin would pass back through
+   * the question mark they started with. `forwards` holds the final state flat and facing front.
+   */
+  @keyframes photoFlip {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(180deg);
+    }
+  }
+
+  /*
+   * The value appearing on the flipped photo.
+   *
+   * TIMED TO LAND AS THE FLIP SETTLES, so the number is not readable while the card is still
+   * turning - a value that appeared mid-turn would be a hatched, unreadable smudge, and the child
+   * would look away at the moment the station is showing them the answer.
+   */
+  @keyframes revealValue {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * The hidden clue card uncovering.
+   *
+   * A GOLD FLASH ON TOP OF THE UNCOVER, which is what the brief asks for: the card brightens past
+   * white and settles, so the reveal is a flash of light rather than a fade-in. `brightness` rather
+   * than a colour change, so the parchment tone is preserved through it.
+   */
+  @keyframes clueReveal {
+    0% {
+      opacity: 0.4;
+      transform: scale(0.94);
+      filter: brightness(2.1);
+    }
+    55% {
+      opacity: 1;
+      transform: scale(1.02);
+      filter: brightness(1.55);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: brightness(1);
+    }
+  }
+
+  @keyframes noteShake {
+    0%,
+    100% {
+      margin-left: 0;
+    }
+    20% {
+      margin-left: -6px;
+    }
+    40% {
+      margin-left: 6px;
+    }
+    60% {
+      margin-left: -4px;
+    }
+    80% {
+      margin-left: 4px;
+    }
+  }
+
+  /*
+   * The solved X card turning over.
+   *
+   * A HALF-TURN, NOT A FULL ONE, so the card is never edge-on facing away - the child has to end
+   * up looking at the value, and a full spin would pass through the back face showing the
+   * question mark they started with. `forwards` holds the final state flat and facing front.
+   */
+  @keyframes cardFlip {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(180deg);
+    }
+  }
+
+  /*
+   * The "פוענח!" stamp.
+   *
+   * IT OVERSHOOTS AND SETTLES, so it reads as being pressed onto the page rather than faded in.
+   * The rotation is part of the keyframe rather than a utility class because the same element
+   * also scales, and two `transform` declarations on one node do not compose - the later one
+   * silently wins.
+   */
+  @keyframes stampSlam {
+    from {
+      opacity: 0;
+      transform: rotate(-12deg) scale(2.2);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(-12deg) scale(1);
+    }
+  }
+
+  /*
+   * Station 1's shake - the four puzzles' shared "not that one" gesture.
+   *
+   * A SEPARATE KEYFRAME FROM `noteShake`, which is Station 2's. That one animates `margin-left`
+   * because Station 2's notes are positioned by a transform; the Station 1 puzzles are SVG
+   * groups, where a transform is already in use on several of them and overwriting it would move
+   * the puzzle rather than rattle it. This one translates in place instead.
+   */
+  @keyframes puzzleShake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-7px);
+    }
+    40% {
+      transform: translateX(7px);
+    }
+    60% {
+      transform: translateX(-4px);
+    }
+    80% {
+      transform: translateX(4px);
+    }
+  }
+
+  /*
+   * The window shard dropping into its frame.
+   *
+   * IT STARTS BIG AND SETTLES, rather than travelling from the tray, because the shard has already
+   * been lifted out of the tray in the child's mind by the time they tap the void - a flight across
+   * the photograph would take longer than the beat it is decorating and would read as a second,
+   * separate action.
+   */
+  @keyframes snapIn {
+    from {
+      opacity: 0;
+      transform: scale(1.5);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * The garden route's marching dashes.
+   *
+   * PURELY DECORATIVE. The step counter is driven by React state, not by this animation, and the
+   * two are not synchronised - the dashes say "this route is being walked right now", and the
+   * number says how far. Worth being explicit about, because it is the animation that would be
+   * cut first if they ever disagreed.
+   */
+  @keyframes dashWalk {
+    from {
+      stroke-dashoffset: 20;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /*
+   * A solved garden route, once its perimeter has been confirmed.
+   *
+   * A GLOW RATHER THAN A COLOUR CHANGE, because the colour is already carrying the route's
+   * identity (A, B or C) throughout the puzzle and repainting it green would erase which route the
+   * child picked. The halo says "correct" without taking the label away.
+   */
+  @keyframes routeGlow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 0 rgba(74, 222, 128, 0));
+    }
+    50% {
+      filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.95));
+    }
+  }
+
+  /*
+   * Station 3's leap trail - an arc appearing as it is drawn.
+   *
+   * IT GROWS FROM THE TAKE-OFF END, which is what makes the four arcs read as a sequence rather
+   * than as four lines that were always there. Scaling from the left edge is right for a line that
+   * always travels left to right, which is the case here and is the reason no transform-origin is
+   * needed.
+   */
+  @keyframes trailIn {
+    from {
+      opacity: 0;
+      stroke-dashoffset: 26;
+    }
+    to {
+      opacity: 0.85;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /*
+   * The thief landing after a leap.
+   *
+   * A SMALL SQUASH RATHER THAN A BIG ONE. This fires four times per chase, and anything more
+   * emphatic would turn a sequence of leaps into a sequence of distractions. It exists to separate
+   * "he is airborne" from "he has landed", nothing more.
+   */
+  @keyframes leapPop {
+    0% {
+      transform: scale(0.86);
+    }
+    60% {
+      transform: scale(1.06);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * A net dropping onto a suspect - and, on a miss, onto an empty post.
+   *
+   * `cubic-bezier` WITH A SLIGHT OVERSHOOT on the way in, so it reads as a weight landing and
+   * settling rather than as a decal fading in. The overshoot is small because the net's job is to
+   * say WHERE, and an exaggerated bounce would pull the eye to the animation instead of the place.
+   */
+  @keyframes netDrop {
+    0% {
+      opacity: 0;
+      transform: translateY(-14px) scale(1.18);
+    }
+    70% {
+      opacity: 1;
+      transform: translateY(2px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+   * Mud splashing up when a wrong puddle spot is inspected.
+   *
+   * AN UP-AND-OUT MOTION, which is the one shape a splash has. Unlike the other Station 3
+   * animations this one DOES carry information - it says "you disturbed the mud here, and it was
+   * empty" - but the error counter records the same thing, so it can still be cut under
+   * reduced-motion.
+   */
+  @keyframes mudSplash {
+    0% {
+      opacity: 0.95;
+      transform: translateY(0) scale(0.5);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-18px) scale(1.5);
+    }
+  }
+
+  /*
+   * The sunken key rising out of the mud.
+   *
+   * IT RISES AND STAYS - there is no fade at the end, because the key REMAINS on screen as the
+   * proof the child found the right spot. This is the station's reveal, so the animation ends at
+   * the state it is delivering rather than passing through it.
+   */
+  @keyframes keyRise {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+   * The gate at an intersection closing on the suspect.
+   *
+   * TWO HALVES SLIDING IN FROM OPPOSITE SIDES, done with a scale on a group whose origin is the
+   * gate's own centre. A single `scaleX` would squash the gateposts rather than sliding them, so
+   * each post also counter-scales - see the note in `IntersectionChase`, which is where that is
+   * assembled.
+   */
+  @keyframes gateClose {
+    0% {
+      opacity: 0.4;
+      transform: scaleX(1.7);
+    }
+    100% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+  }
+
+  /*
+   * A runner's arrival at a gate.
+   *
+   * A SHORT HOP WITH A HOLD AT THE TOP, timed so that two runners with different step counts land
+   * together. Both are driven by the same keyframe, which is what makes "they arrive at the same
+   * moment" legible rather than merely asserted.
+   */
+  @keyframes runnerArrive {
+    0% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  /*
+   * A burrow's earth being pushed aside as the thief is dug out.
+   *
+   * A SHORT SHAKE FOLLOWED BY A HOLD, so the mound looks disturbed at the end rather than mid-wobble -
+   * the child needs to see WHICH burrow they opened.
+   */
+  @keyframes burrowDig {
+    0%,
+    100% {
+      transform: translateX(0) translateY(0);
+    }
+    20% {
+      transform: translateX(-3px) translateY(1px);
+    }
+    40% {
+      transform: translateX(3px) translateY(-1px);
+    }
+    60% {
+      transform: translateX(-2px) translateY(1px);
+    }
+    80% {
+      transform: translateX(2px) translateY(0);
+    }
+  }
+
+  /* ===================================================================
+   * Station 1, symmetry: the crest being uncovered.
+   * =================================================================== */
+
+  /*
+   * A covered cell peeling away to reveal the medallion underneath.
+   *
+   * IT SHRINKS FROM THE CENTRE AND FADES, which reads as a tile being lifted off rather than as a
+   * colour change - the distinction matters because the whole puzzle is "the other half of the
+   * photograph is under there". A cross-fade would look like the cell had merely been repainted.
+   *
+   * THE END STATE IS `opacity: 0`, and that is why this one is safe to cut under reduced-motion:
+   * the tile is removed from the DOM at the end of the beat anyway (see `revealed`), so stopping
+   * the animation leaves the child looking at an uncovered cell immediately.
+   */
+  @keyframes tileLift {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.55);
+    }
+  }
+
+  /*
+   * The flash on a cell that was just correctly uncovered.
+   *
+   * A RING THAT EXPANDS AND FADES, drawn on top of the revealed artwork rather than tinting it -
+   * the point of the puzzle is that the photo is now visible, so the celebration must not cover
+   * the thing being celebrated.
+   */
+  @keyframes revealFlash {
+    0% {
+      opacity: 0.95;
+      transform: scale(0.7);
+      stroke-width: 9;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.35);
+      stroke-width: 1;
+    }
+  }
+
+  /*
+   * The sparkles that fly off a correct cell.
+   *
+   * A SHORT TRAVEL OUTWARD WITH A FADE. The four sparks share this keyframe and each is given its
+   * own direction by a rotation on its parent group, so one animation covers all four without four
+   * near-identical keyframes.
+   */
+  @keyframes sparkleOut {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-13px) scale(0.4);
+    }
+  }
+
+  /*
+   * The whole mask over the hidden half dissolving once the last cell is solved.
+   *
+   * IT IS APPLIED TO TWO ELEMENTS, AND THEY MUST STAY IN STEP: the masked copy of the photograph,
+   * and the group of visible dark tiles. Those are two renderings of one thing - the photograph is
+   * hidden because the tiles are drawn over it - so fading only one would leave the child looking
+   * at dark rectangles over a picture that had already come back, or at nothing where the picture
+   * should be.
+   *
+   * 500ms, as specified, and timed to finish just before the restored crest's own shine begins.
+   */
+  @keyframes maskDissolve {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  /*
+   * The restored medallion: a settle with a shine passing over it.
+   *
+   * THE SCALE IS THE "3D" BEAT - a slight overshoot then a return, which reads as the disc turning
+   * to face the child. The brightness is carried on `filter` rather than on a colour so it works
+   * over the photograph's own tones instead of flattening them.
+   */
+  @keyframes crestRestore {
+    0% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    35% {
+      transform: scale(1.045);
+      filter: brightness(1.45);
+    }
+    70% {
+      transform: scale(0.995);
+      filter: brightness(1.1);
+    }
+    100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /*
+     * The Detective Math entrance pair.
+     *
+     * BOTH ARE ONE-SHOT AND BOTH END AT FULL OPACITY, so stopping them is safe: the card and
+     * the badge simply appear, fully visible, with no travel or overshoot. Neither carries any
+     * meaning that the motion was conveying - the case title, the suspect name and the badge
+     * are all static content - so there is nothing to replace, unlike the balloon above.
+     */
+    .animate-\[briefingIn_320ms_ease-out\],
+    .animate-\[suspectPop_600ms_cubic-bezier\(0\.34\,1\.56\,0\.64\,1\)\],
+    /*
+     * Station 2's three ceremonies.
+     *
+     * THE STAMP AND THE FLIP ARE WHERE THE STATION'S PAY-OFF LIVES, so they are not simply cut.
+     * `stampSlam` and `cardFlip` both END at the visually meaningful state - the stamp at full
+     * size, the card at its half-turn - so stopping them leaves the child looking at exactly
+     * what the motion was delivering, just without the travel. The shake is the one that can be
+     * dropped outright: it carries no information the `onError` counter does not already carry.
+     */
+    .animate-\[stampSlam_\.35s_ease-out\],
+    .animate-\[cardFlip_\.7s_ease-out_forwards\],
+    .animate-\[noteShake_\.4s_ease-in-out\],
+    /*
+     * Station 2's rebuild, five more.
+     *
+     * `pairEliminate` is the one that matters: it ends at opacity 0 and the items are unmounted
+     * immediately after, so stopping it removes them exactly as the animation would have. The
+     * connector draw ends fully drawn, the photo flip ends at its half turn, the value ends at full
+     * opacity, and the clue reveal ends at brightness 1 - so none of the four delivers anything by
+     * moving. Only the shake is decorative, and it duplicates the error counter.
+     */
+    .animate-\[pairEliminate_\.25s_ease-in-out_forwards\],
+    .animate-\[connectorDraw_\.45s_ease-out_forwards\],
+    .animate-\[photoFlip_\.7s_ease-out_forwards\],
+    .animate-\[revealValue_\.5s_ease-out\],
+    .animate-\[clueReveal_\.5s_ease-out\],
+    /*
+     * Station 1's four.
+     *
+     * ALL FOUR ARE SAFE TO STOP, and for once the reason is the same in each case: none of them is
+     * carrying information the child cannot get another way. The shake is a refusal, and the error
+     * counter already records the miss. The snap-in ends at the placed shard, which is drawn at
+     * rest anyway. The marching dashes are decoration and are documented as such. The route glow
+     * ends back at no glow at all, so stopping it simply leaves the route in its own colour - which
+     * is still the colour that says which route was solved.
+     */
+    .animate-\[puzzleShake_\.4s_ease-in-out\],
+    .animate-\[snapIn_\.34s_ease-out\],
+    .animate-\[routeGlow_1s_ease-in-out\],
+    /*
+     * Station 3's six.
+     *
+     * ALL SIX CAN BE STOPPED, and the reason is the same for each: NONE OF THEM ENDS AT A STATE THE
+     * CHILD NEEDS IN ORDER TO SEE THE ANSWER. The leap trail ends with the arc drawn - stopped, the
+     * arc simply appears. The landing squash ends back at scale 1. The net drop, the gate close and
+     * the burrow dig all end at their settled state, so cutting them leaves the net down, the gate
+     * shut and the burrow open. The key rise ends at full opacity, so the key is simply there.
+     *
+     * The mud splash is the one that loses something - it stops mid-air instead of finishing - but
+     * it is the only one that fades to nothing at the end anyway, so cutting it costs a child
+     * nothing except the flourish. The error counter records the miss either way.
+     */
+    .animate-\[trailIn_\.3s_ease-out\],
+    .animate-\[leapPop_\.3s_ease-out\],
+    .animate-\[netDrop_\.45s_ease-in\],
+    .animate-\[mudSplash_\.7s_ease-out\],
+    .animate-\[mudSplash_\.7s_ease-out_forwards\],
+    .animate-\[keyRise_\.55s_ease-out\],
+    .animate-\[gateClose_\.5s_ease-out\],
+    .animate-\[runnerArrive_\.4s_ease-out\],
+    .animate-\[burrowDig_\.5s_ease-in-out\],
+    /*
+     * The symmetry crest's six.
+     *
+     * THE FIRST TWO ARE LOAD-BEARING AND MUST STILL END AT THEIR FINAL STATE, which they do: the
+     * tile lift ends fully transparent (and the tile is unmounted anyway) and the mask dissolve
+     * ends fully transparent - so stopped, the hidden half is simply already uncovered. The flash
+     * and the sparkle end at zero opacity, so they vanish. The crest restore ends back at scale 1
+     * and normal brightness.
+     *
+     * The shake is the only one that could have been dropped outright, and it is here for the same
+     * reason as the other shakes: it carries nothing the error counter does not.
+     */
+    .animate-\[tileLift_\.32s_ease-out\],
+    .animate-\[revealFlash_\.55s_ease-out\],
+    .animate-\[sparkleOut_\.6s_ease-out\],
+    .animate-\[maskDissolve_\.5s_ease-out_forwards\],
+    .animate-\[crestRestore_1\.1s_ease-in-out\],
+    /*
+     * `dashWalk` IS NOT A CLASS ANIMATION - the garden puzzle sets it on an inline `style` because
+     * the dash pattern is per-route. It is listed here anyway so a reader grepping this block finds
+     * it, and the rule below catches it by targeting the dash offset directly.
+     */
+    .animate-\[shake_\.4s_ease-in-out\],
+    .animate-\[hop_9s_ease-in-out_infinite\],
+    .animate-\[hop_3s_ease-in-out_infinite\],
+    .animate-\[float_4s_ease-in-out_infinite\],
+    .animate-\[wobble_\.45s_ease-in-out\],
+    .animate-\[burst_\.45s_ease-out_forwards\],
+    .animate-\[hopSmall_\.4s_ease-out\],
+    .animate-\[truckTilt_\.9s_ease-in-out_infinite\],
+    .animate-\[pulseLock_1\.4s_ease-in-out_infinite\],
+    .animate-\[smoke_4\.2s_ease-out_infinite\],
+    .animate-\[balloonDescend_3\.5s_ease-out_both\],
+    .animate-\[balloonBob_3\.4s_ease-in-out_infinite\],
+    .animate-\[balloonDepart_1\.2s_ease-in_both\],
+    .animate-\[sparkle_2\.6s_ease-in-out_infinite\],
+    .animate-\[sparkle_1\.9s_ease-in-out_infinite\],
+    .animate-\[drift_var\(--drift\,40s\)_linear_infinite\],
+    .animate-\[balloonPop_\.3s_ease-out\],
+    .animate-\[riseNudge_\.4s_ease-out\],
+    .animate-\[goldGlow_2\.4s_ease-in-out_infinite\],
+    /*
+     * The Beat Studio's muted key. Its breathing glow is an infinite animation, so
+     * it is stopped here like the other ambience. The dashed border and the `?` are
+     * static and carry the whole meaning without it - the glow only draws the eye,
+     * and a child who has asked for reduced motion does not need drawing.
+     */
+    .animate-\[pulseGlow_1\.6s_ease-in-out_infinite\],
+    .animate-\[chalkDust_\.5s_ease-out_forwards\],
+    .animate-\[stampIn_\.35s_ease-out\],
+    .animate-\[hopUp_\.5s_ease-out\],
+    .animate-\[chalkIn_\.28s_ease-out\],
+    .animate-\[trotBob_var\(--trot\,1\.4s\)_ease-in-out_infinite\],
+    .animate-\[animalDance_var\(--dance\,\.6s\)_ease-in-out_infinite\],
+    .animate-\[shutterSlam_\.55s_cubic-bezier\(\.34\,1\.56\,\.64\,1\)_forwards\],
+    .animate-\[shutterOpen_\.4s_ease-out_forwards\],
+    .animate-\[dustPuff_\.6s_ease-out_forwards\],
+    .animate-\[confettiFall_1\.4s_ease-in_forwards\],
+    .animate-\[rise_\.2s_ease-out\],
+    .animate-\[foodDrop_\.42s_cubic-bezier\(\.2\,\.9\,\.3\,1\.3\)_forwards\],
+    .animate-\[happyBounce_\.5s_ease-in-out\],
+    /*
+     * The bridge guard's three moods.
+     *
+     * ALL THREE ARE STOPPED, including the celebration hop, and that is the point of
+     * putting him here: a child who has asked for reduced motion wants the guard to
+     * hold still whatever mood he is in. The moods are not lost - the speech bubble
+     * still changes its line and the locks still light up, so the answer feedback
+     * survives without a single pixel of movement.
+     */
+    .animate-\[guardBreathe_2\.5s_ease-in-out_infinite\],
+    .animate-\[guardCheer_\.7s_cubic-bezier\(\.34\,1\.56\,\.64\,1\)_forwards\],
+    .animate-\[guardWobble_2s_ease-in-out_infinite\],
+    /*
+     * The sticker album's motion.
+     *
+     * The FLIP is the one that matters: it is a 3D rotation, which is the effect most
+     * likely to cause trouble for a motion-sensitive child. It is stopped rather than
+     * shortened, and the card simply appears - the reveal still reads, because the rarity
+     * banner and the sparkle burst are separate, and the burst is a fade rather than a
+     * movement.
+     */
+    .animate-\[stickerFlip_\.6s_ease-out_forwards\],
+    .animate-\[legendaryShine_2\.4s_ease-in-out_infinite\],
+    .animate-\[envelopeShake_\.5s_ease-in-out\],
+    .animate-\[sealStamp_\.5s_cubic-bezier\(\.34\,1\.56\,\.64\,1\)_forwards\],
+    /*
+     * The holographic foil, the mystery lock, and the legendary sparkles.
+     *
+     * The foil sweep is a translating band of light, which is exactly the kind of
+     * repeating peripheral motion this preference exists to suppress, so it is stopped
+     * outright. The card does NOT lose its rarity treatment: the iridescent border, the
+     * chrome badge and the glow are all static, and they carry the rank on their own. The
+     * sweep was always the flourish, never the message.
+     *
+     * `.animate-shimmer-foil` is named directly because it is a real utility rather than
+     * an arbitrary value, and the scanner below only matches class names as written.
+     */
+    .animate-shimmer-foil,
+    .animate-\[mysteryPulse_2s_ease-in-out_infinite\],
+    .animate-\[legendSpark_2\.6s_ease-in-out_infinite\] {
+      animation: none !important;
+    }
+    /*
+     * The night barn's eye glow and celebration bounce are applied as INLINE
+     * styles on SVG groups, so a class selector cannot reach them. They are
+     * matched on the animation NAME instead, which does reach the inline
+     * declaration. The glow is swapped for a still, full-brightness dot rather
+     * than removed - the eyes are the only thing visible in the dark, so killing
+     * the animation entirely would leave the barn truly empty.
+     */
+    [style*='eyeGlow'] {
+      animation: eyeStill 1ms linear infinite !important;
+    }
+    [style*='happyBounce'] {
+      animation: none !important;
+    }
+    /*
+     * The constellation spin is inline-styled, so it is matched on the animation
+     * NAME, like the barn's eyes above. It is stopped rather than slowed: a shape
+     * creeping round would still defeat a child who needs a still silhouette to
+     * count, which is the accommodation this rule exists to provide.
+     */
+    [style*='starSpin'] {
+      animation: none !important;
+    }
+    /*
+     * The balloon's ascent cannot simply be cancelled: the rise keyframe is what
+     * carries the balloon into view from below.
+     *
+     * It is replaced by a SLOW FADE IN PLACE rather than a stationary park. A
+     * parked balloon never fires `animationend`, so it never leaves the stage -
+     * and because the sprint holds only 3 to 5 balloons aloft, a parked field
+     * latches at its limit and then stops spawning for the whole 45 seconds. The
+     * child would be left with three balloons and no game. A fade keeps the
+     * motion out (nothing travels) while still ending, so balloons retire and the
+     * field keeps cycling.
+     */
+    .animate-\[riseBalloon_var\(--rise\,9s\)_linear_both\] {
+      animation: riseStill var(--rise, 9s) linear both !important;
+    }
+  }
+}
