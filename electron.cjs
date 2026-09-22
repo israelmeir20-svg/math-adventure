@@ -13,6 +13,7 @@
  */
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('node:path');
+const { autoUpdater } = require('electron-updater');
 
 /**
  * The dev server URL, kept in one place so the window and the error page cannot disagree.
@@ -175,7 +176,16 @@ if (!gotTheLock) {
     }
   });
 
-  app.whenReady().then(createWindow);
+  app.whenReady().then(() => {
+    createWindow();
+
+    // Check and download updates silently in production
+    if (!isDev) {
+      autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+        console.error('Update check failed:', err);
+      });
+    }
+  });
 
   app.on('activate', () => {
     // macOS keeps the app alive with no windows; re-create one on dock click.

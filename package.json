@@ -1,7 +1,7 @@
 {
   "name": "math-adventure",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "הרפתקת החשבון - a maths adventure game for kids",
   "author": "Math Adventure",
   "type": "module",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
+    "electron-updater": "^6.8.9",
     "lucide-react": "^1.44.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
@@ -46,6 +47,13 @@
     "directories": {
       "output": "C:/build-math-adventure"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "israelmeir20-svg",
+        "repo": "math-adventure"
+      }
+    ],
     "files": [
       "dist/**/*",
       "electron.cjs",
