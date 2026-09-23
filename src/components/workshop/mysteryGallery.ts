@@ -65,16 +65,16 @@ const folderModules = import.meta.glob('/src/assets/mystery-images/*.{jpg,jpeg,p
  * recognise the bakery when it turns up as a mystery.
  *
  * ================================================================================================
- * EVERY PATH HERE IS VERIFIED AGAINST `public/stickers/`, AND FIVE OF THEM WERE NOT
+ * EVERY PATH HERE IS VERIFIED AGAINST `public./stickers/`, AND FIVE OF THEM WERE NOT
  * ================================================================================================
  *
- * This list previously pointed at a `public/stickers/workshop/` folder that DOES NOT EXIST:
+ * This list previously pointed at a `public./stickers/workshop/` folder that DOES NOT EXIST:
  *
- *     /stickers/workshop/carpentry_workshop.jpg     <- 404
- *     /stickers/workshop/oil_press.jpeg             <- 404
- *     /stickers/workshop/bakery.jpeg                <- 404
- *     /stickers/workshop/observatory.jpg            <- 404
- *     /stickers/workshop/race.jpeg                  <- 404
+ *     ./stickers/workshop/carpentry_workshop.jpg     <- 404
+ *     ./stickers/workshop/oil_press.jpeg             <- 404
+ *     ./stickers/workshop/bakery.jpeg                <- 404
+ *     ./stickers/workshop/observatory.jpg            <- 404
+ *     ./stickers/workshop/race.jpeg                  <- 404
  *
  * FIVE OF THE TEN STOCK ENTRIES WERE DEAD, which is the "broken images in the workshop" report.
  * The failure mode is worth spelling out, because it is invisible to every check the project runs:
@@ -94,7 +94,7 @@ const folderModules = import.meta.glob('/src/assets/mystery-images/*.{jpg,jpeg,p
  * respectively: the first because there is no oil-press art anywhere in `public/`, and the second
  * because `landscape.jpg` was already the village's establishing shot and belongs in the rotation.
  *
- * THE RULE FOR ADDING AN ENTRY IS NOW: the path must correspond to a file under `public/stickers/`,
+ * THE RULE FOR ADDING AN ENTRY IS NOW: the path must correspond to a file under `public./stickers/`,
  * spelled EXACTLY (the extensions genuinely differ - `.jpeg`, `.jpg` and `.gif` are all in use, and
  * getting one wrong is a 404). `verify-gallery.mjs` checks every path in this file against disk.
  */
@@ -104,22 +104,22 @@ interface FallbackImage {
 }
 
 export const FALLBACK_IMAGES: FallbackImage[] = [
-  { url: '/stickers/landscape/landscape.jpg', title: 'טחנת הרוח והשדות' },
-  { url: '/stickers/school/laboratory.gif', title: 'המעבדה של בית הספר' },
-  { url: '/stickers/school/lunchbox.jpg', title: 'ארוחת הצהריים' },
-  { url: '/stickers/school/easel.jpg', title: 'לוח הציור בכיתה' },
-  { url: '/stickers/school/garden.jpg', title: 'חצר המשחקים' },
-  { url: '/stickers/school/class.jpg', title: 'הכיתה של הכפר' },
-  { url: '/stickers/heroes/chef.jpg', title: 'השף של הכפר' },
-  { url: '/stickers/heroes/doctor.jpg', title: 'הרופאה של הכפר' },
-  { url: '/stickers/heroes/driver.jpg', title: 'הנהג של הכפר' },
-  { url: '/stickers/animals/pony.gif', title: 'הפוני באורווה' },
-  { url: '/stickers/animals/sheep.jpg', title: 'הכבשה במרעה' },
-  { url: '/stickers/animals/swan.jpg', title: 'הברבור באגם' },
-  { url: '/stickers/family/father.jpeg', title: 'אבא במשק' },
-  { url: '/stickers/family/grandfather.jpeg', title: 'סבא ליד האח' },
-  { url: '/stickers/birthday/birthday.jpg', title: 'יום ההולדת של הכפר' },
-  { url: '/stickers/achievements/the_tag_sequence.jpg', title: 'משחק התופסת' },
+  { url: './stickers/landscape/landscape.jpg', title: 'טחנת הרוח והשדות' },
+  { url: './stickers/school/laboratory.gif', title: 'המעבדה של בית הספר' },
+  { url: './stickers/school/lunchbox.jpg', title: 'ארוחת הצהריים' },
+  { url: './stickers/school/easel.jpg', title: 'לוח הציור בכיתה' },
+  { url: './stickers/school/garden.jpg', title: 'חצר המשחקים' },
+  { url: './stickers/school/class.jpg', title: 'הכיתה של הכפר' },
+  { url: './stickers/heroes/chef.jpg', title: 'השף של הכפר' },
+  { url: './stickers/heroes/doctor.jpg', title: 'הרופאה של הכפר' },
+  { url: './stickers/heroes/driver.jpg', title: 'הנהג של הכפר' },
+  { url: './stickers/animals/pony.gif', title: 'הפוני באורווה' },
+  { url: './stickers/animals/sheep.jpg', title: 'הכבשה במרעה' },
+  { url: './stickers/animals/swan.jpg', title: 'הברבור באגם' },
+  { url: './stickers/family/father.jpeg', title: 'אבא במשק' },
+  { url: './stickers/family/grandfather.jpeg', title: 'סבא ליד האח' },
+  { url: './stickers/birthday/birthday.jpg', title: 'יום ההולדת של הכפר' },
+  { url: './stickers/achievements/the_tag_sequence.jpg', title: 'משחק התופסת' },
 ];
 
 /**

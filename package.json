@@ -1,7 +1,7 @@
 {
   "name": "math-adventure",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "הרפתקת החשבון - a maths adventure game for kids",
   "author": "Math Adventure",
   "type": "module",

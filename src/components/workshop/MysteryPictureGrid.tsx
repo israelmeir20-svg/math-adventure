@@ -114,7 +114,7 @@ export default function MysteryPictureGrid({
    * The board draws the picture with a bare `<img src>` inside a sealed mask, so a URL that 404s
    * renders the browser's broken-image glyph - and because the covers are opaque, the child sees a
    * torn icon on the picture they just solved every equation to reveal. That is precisely what
-   * happened when five of the stock entries pointed at a `public/stickers/workshop/` folder that does
+   * happened when five of the stock entries pointed at a `public./stickers/workshop/` folder that does
    * not exist: the paths were fixed at the source, and this handler is the belt to that pair of
    * braces.
    *

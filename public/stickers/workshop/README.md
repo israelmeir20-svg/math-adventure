@@ -11,7 +11,7 @@ file is bundled and appears in the game's rotation on the next dev-server reload
 
 ## What happens when this folder is empty
 
-The game falls back to ten stock village illustrations from `public/stickers/` (the
+The game falls back to ten stock village illustrations from `public./stickers/` (the
 windmill, the workshops, the classroom, and so on), plus the three original hand-authored
 SVG scenes. So the game always has pictures to show — this folder is for adding *your*
 art, not for making the game work.
